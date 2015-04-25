@@ -144,4 +144,30 @@ var server = app.listen(8888, function() {
 	var port = server.address().port;
 	
 	console.log("Listening at http://%s:%s", host, port);
+	
+	MongoClient.connect(url, function(err, db) {
+		assert.equal(null, err);
+		console.log("Connected correctly to server.");
+		db.collection('boards').count(function(err, count) {
+			if( !err && count === 0 ) {
+				db.collection('boards').createIndex( { location: "2dsphere" } );
+				
+				var point = {
+					"type": "Point",
+					"coordinates": [0, 0]
+				};
+				
+				db.collection('boards').insert({
+					"location" : point,
+					"board": ["Congratulations, you won the game"]
+				});
+				console.log("DB population complete");
+			} else {
+				console.dir(err);
+				console.log("DB already populated");
+			}
+			
+			db.close();
+		});
+	});
 });
