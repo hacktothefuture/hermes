@@ -21,9 +21,11 @@ var insertBoard = function(db, message_info, callback) {
 	expiration_date = new Date(Date.UTC()+(86400 * 1000 * days_to_expiration));
 	db.collection('boards').ensureIndex( { location: "2dsphere" } );
 	var location = message_info.location;
+	console.dir(location.coordinates);
 	var point = {
 		"type": "Point",
-		"coordinates": location.coordinates};
+		"coordinates": [location.coordinates[1], location.coordinates[0]]
+	};
 	
 	db.collection('boards').insert( {
 		"location" : point,
@@ -36,7 +38,7 @@ var findBoards = function(db, message_info, callback) {
 	var location = message_info.location;
 	var point = {
 		"type": "Point",
-		"coordinates": [location.lat, location.lon]
+		"coordinates": [location.lon, location.lat]
 	};
 	/*
 	db.runCommand({geoNear: 'boards',
@@ -134,7 +136,7 @@ app.post( '/send_message', function(request, response){
 			db.close();
 		});
 	});
-	response.sendStatus(200);
+	response.send(null);
 });
 
 var server = app.listen(8888, function() {
