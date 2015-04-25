@@ -144,8 +144,9 @@ public class GeofenceTransitionService extends IntentService {
                 .setColor(Color.RED)
                 .setContentTitle(notificationDetails)
 //                .setContentText(getString(R.string.geofence_transition_notification_text))
-                .setContentText("Geofence entered")
-                .setContentIntent(notificationPendingIntent);
+                .setContentText("Geofence activity detected")
+                .setContentIntent(notificationPendingIntent)
+                .setVibrate(new long[] {2000, 2000});
 
         // Dismiss notification once the user touches it.
         builder.setAutoCancel(true);
