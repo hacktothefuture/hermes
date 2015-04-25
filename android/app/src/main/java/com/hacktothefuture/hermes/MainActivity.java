@@ -30,21 +30,32 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.List;
 import java.util.Random;
+
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback {
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, ResultCallback,
+        Callback<List<Message>> {
     private static final String TAG = "MainActivity";
     private static final int ZOOM_LEVEL = 20;
     private static final int GEOFENCE_RADIUS_IN_METERS = 40;
     private static final long GEOFENCE_EXPIRATION_DURATION = 180000;
     private static final long LOCATION_POLLING_INTERVAL_IN_MILLIS = 3000;
 
+    private static final String API_URL = "http://137.22.189.79:8888";
+
+
     GoogleApiClient m_GoogleApiClient;
     GoogleMap m_map;
     Marker m_marker;
     PendingIntent mGeofencePendingIntent;
+    RestAdapter m_restAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +70,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
         m_GoogleApiClient.connect();
 
+        m_restAdapter = new RestAdapter.Builder()
+                .setEndpoint(API_URL)
+                .build();
+
         MapFragment mf = (MapFragment) getFragmentManager().findFragmentById(R.id.fragment_map);
         mf.getMapAsync(new OnMapReadyCallback() {
             @Override
@@ -71,12 +86,27 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         leaveMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                makeFence();
+                leaveMessage();
+            }
+        });
+
+        Button getMessagesButton = (Button) findViewById(R.id.get_messages_button);
+        getMessagesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getMessages();
             }
         });
     }
 
-    private void makeFence() {
+    private void getMessages() {
+        AppClient.MyApp client = m_restAdapter.create(AppClient.MyApp.class);
+
+        client.getMessages(45.0f, 45.0f, this);
+
+    }
+
+    private void leaveMessage() {
         Location location = LocationServices.FusedLocationApi.getLastLocation(m_GoogleApiClient);
         Geofence geofence = new Geofence.Builder()
                 // Set the request ID of the geofence. This is a string to identify this
@@ -105,6 +135,24 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
                 .position(new LatLng(location.getLatitude(), location.getLongitude()))
                 .title("Current location")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+        AppClient.MyApp client = m_restAdapter.create(AppClient.MyApp.class);
+
+        String content = "My message";
+        com.hacktothefuture.hermes.Location loc = new com.hacktothefuture.hermes.Location();
+
+        client.sendMessage(loc, content, new Callback<Void>() {
+            @Override
+            public void success(Void aVoid, Response response) {
+                Log.i(TAG, "Retrofit POST successful.");
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.e(TAG, "Retrofit POST failed at URL: " + error.getUrl());
+                Log.e(TAG, "Retrofit POST failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
+            }
+        });
     }
 
     @Override
@@ -153,8 +201,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
         Intent intent = new Intent(this, GeofenceTransitionService.class);
         // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
         // calling addGeofences() and removeGeofences().
-        return PendingIntent.getService(this, 0, intent, PendingIntent.
+        mGeofencePendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.
                 FLAG_UPDATE_CURRENT);
+        return mGeofencePendingIntent;
     }
 
     @Override
@@ -173,7 +222,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        Log.i(TAG, "GoogleApiClient failed to connect.");
+        Log.e(TAG, "GoogleApiClient failed to connect.");
 
     }
 
@@ -195,5 +244,25 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.C
     @Override
     public void onResult(Result result) {
         Log.i(TAG, "Geofence registered.");
+    }
+
+    public void success(List<Message> messages, Response response) {
+        Log.i(TAG, "Retrofit GET successful.");
+
+        for (Message message : messages) {
+            List<String> message_list = message.getBoard();
+            for (String s : message_list) {
+                Log.i(TAG, "Receieved message: " + s);
+            }
+            com.hacktothefuture.hermes.Location loc = message.getLocation();
+            List<Float> coords = loc.getCoordinates();
+            Log.i(TAG, "Location: lat = " + coords.get(0) + ", long = " + coords.get(1) + ", board_id = " + message.getBoard_id());
+        }
+    }
+
+    @Override
+    public void failure(RetrofitError error) {
+        Log.e(TAG, "Retrofit GET failed at URL: " + error.getUrl());
+        Log.e(TAG, "Retrofit GET failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
     }
 }
