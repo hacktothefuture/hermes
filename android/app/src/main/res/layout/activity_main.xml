@@ -47,11 +47,23 @@
         android:id="@+id/fragment_map"
         android:name="com.google.android.gms.maps.MapFragment"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
     <Button android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="@string/leave_message"
         android:id="@+id/leave_message_button"
         android:textAllCaps="false" />
-
+    <Button android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/get_messages"
+        android:id="@+id/get_messages_button"
+        android:textAllCaps="false" />
+    </LinearLayout>
 </LinearLayout>

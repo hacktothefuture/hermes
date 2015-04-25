@@ -8,4 +8,5 @@
     <string name="geofence_transition_entered">Geofence entered</string>
     <string name="geofence_transition_exited">Geofence exited</string>
     <string name="unknown_geofence_transition">Unknown geofence transition</string>
+    <string name="get_messages">Get messages</string>
 </resources>
