@@ -18,7 +18,7 @@ public class AppClient {
         void getMessages(@Query("lat") float lat, @Query("lon") float lon, Callback<List<Message>> cb);
 
         @POST("/send_message")
-        void sendMessage(@Body Location location, @Body String content, Callback<Void> cb);
+        void sendMessage(@Body PostBundle bundle, Callback<Void> cb);
     }
 
 }

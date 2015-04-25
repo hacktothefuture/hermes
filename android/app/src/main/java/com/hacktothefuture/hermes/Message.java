@@ -8,7 +8,7 @@ import java.util.List;
 public class Message {
     private Location location;
     private List<String> board;
-    private String board_id;
+    private String _id;
 
     public Location getLocation() {
         return location;
@@ -26,11 +26,11 @@ public class Message {
         this.board = board;
     }
 
-    public String getBoard_id() {
-        return board_id;
+    public String get_id() {
+        return _id;
     }
 
-    public void setBoard_id(String board_id) {
-        this.board_id = board_id;
+    public void set_id(String _id) {
+        this._id = _id;
     }
 }
