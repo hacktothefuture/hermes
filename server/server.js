@@ -17,6 +17,21 @@ MongoClient.connect(url, function(err, db) {
 });
 */
 
+var appendBoard = function(db, message_info, callback) {
+	console.log("POST RECEIVED");
+	console.dir(message_info);
+	var ObjectID = require('mongodb').ObjectID;
+	object_id = new ObjectID(message_info.board_id);
+	db.collection('boards').update(
+		{ '_id' : object_id },
+		{
+			$push : {
+				'board' : message_info.content
+			}
+		}
+	);
+};
+
 var insertBoard = function(db, message_info, callback) {
 	expiration_date = new Date(Date.UTC()+(86400 * 1000 * days_to_expiration));
 	db.collection('boards').ensureIndex( { location: "2dsphere" } );
@@ -27,8 +42,13 @@ var insertBoard = function(db, message_info, callback) {
 		"coordinates": [location.coordinates[1], location.coordinates[0]]
 	};
 	
+	if( typeof message_info.key == 'undefined' ) {
+		message_info.key = "";
+	}
+	
 	db.collection('boards').insert( {
 		"location" : point,
+		"key" : message_info.key,
 		"board": [message_info.content]
 	});
 };
@@ -40,6 +60,10 @@ var findBoards = function(db, message_info, callback) {
 		"type": "Point",
 		"coordinates": [location.lon, location.lat]
 	};
+	if( typeof message_info.keys == 'undefined' ) {
+		message_info.keys = [];
+	}
+	message_info.keys.push("");
 	/*
 	db.runCommand({geoNear: 'boards',
 		near: point,1
@@ -58,7 +82,7 @@ var findBoards = function(db, message_info, callback) {
 	});
 	return results;
 	*/
-	db.collection('boards').find({location : {$near: {$geometry : point}}}).toArray(function(err, docs) {
+	db.collection('boards').find({location : {$near: {$geometry : point}}, key : { $in : message_info.keys }}).toArray(function(err, docs) {
 		if( err ) {
 			return console.dir(err);
 		}
@@ -100,6 +124,11 @@ app.get( '/get_messages', function(request, response){
 	var parsed_url = require('url').parse(request.url, true);
 	var query = parsed_url.query;
 	console.log('Received lat: ' + query.lat + ', lon: ' + query.lon);
+	if( typeof query.keys == 'undefined' ) {
+		query.keys = [""];
+	} else {
+		query.keys = query.keys.split(",");
+	}
 	//response.send('Received lat: ' + query.lat + ', lon: ' + query.lon);
 	/*
 	var test_data = [
@@ -117,11 +146,23 @@ app.get( '/get_messages', function(request, response){
 	MongoClient.connect(url, function(err, db) {
 		assert.equal(null, err);
 		console.log("Connected correctly to server.");
-		findBoards(db, { location : { lat : parseFloat(query.lat), lon : parseFloat(query.lon) } }, function(docs) {
+		findBoards(db, { location : { lat : parseFloat(query.lat), lon : parseFloat(query.lon) }, keys: query.keys }, function(docs) {
 			response.send(docs);
 			db.close();
 		});
 	});
+});
+
+// POST: /reply_message
+app.post( '/append_message', function(request, response){
+	MongoClient.connect(url, function(err, db) {
+		assert.equal(null, err);
+		console.log("Connect correctly to server.");
+		appendBoard(db, request.body, function() {
+			db.close();
+		});
+	});
+	response.send(null);
 });
 
 // POST: /send_message
@@ -159,6 +200,7 @@ var server = app.listen(8888, function() {
 				
 				db.collection('boards').insert({
 					"location" : point,
+					"key" : "first",
 					"board": ["Congratulations, you won the game"]
 				});
 				console.log("DB population complete");
