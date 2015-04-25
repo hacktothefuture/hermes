@@ -42,9 +42,16 @@
 
         <!--</LinearLayout>-->
 
-    <fragment android:layout_height="match_parent"
+    <fragment android:layout_height="300dp"
         android:layout_width="match_parent"
         android:id="@+id/fragment_map"
         android:name="com.google.android.gms.maps.MapFragment"/>
+
+    <Button android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/leave_message"
+        android:id="@+id/leave_message_button"
+        android:textAllCaps="false" />
 
 </LinearLayout>
