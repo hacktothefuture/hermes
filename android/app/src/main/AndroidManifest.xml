@@ -40,6 +40,12 @@
             android:name=".MessageLogActivity"
             android:label="@string/title_activity_message_log" >
         </activity>
+
+        <service
+            android:name=".LocationCheckService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
     </application>
 
 </manifest>
