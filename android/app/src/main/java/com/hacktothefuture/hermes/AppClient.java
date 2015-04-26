@@ -17,10 +17,13 @@ public class AppClient {
 
     public interface MyApp {
         @GET("/get_messages")
-        void getMessages(@Query("lat") float lat, @Query("lon") float lon, Callback<List<Message>> cb);
+        void getBoards(@Query("lat") float lat, @Query("lon") float lon, Callback<List<Board>> cb);
 
         @POST("/send_message")
-        void sendMessage(@Body PostBundle bundle, Callback<Void> cb);
+        void createBoard(@Body CreateBoardBundle bundle, Callback<String> cb);
+
+        @POST("/append_message")
+        void writeMessage(@Body WriteMessageBundle bundle, Callback<String> cb);
     }
 
 }

@@ -4,17 +4,17 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="message_log">Message Log</string>
-    <string name="leave_message">Leave a message here</string>
+    <string name="leave_message">Leave a board here</string>
     <string name="geofence_transition_entered">Geofence entered</string>
     <string name="geofence_transition_exited">Geofence exited</string>
     <string name="unknown_geofence_transition">Unknown geofence transition</string>
-    <string name="get_messages">Get messages</string>
+    <string name="get_messages">Get boards</string>
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="post">Post</string>
     <string name="cancel">Cancel</string>
-    <string name="enter_message">Enter a message</string>
+    <string name="enter_message">Enter a board</string>
     <string name="title_activity_message_log">MessageLogActivity</string>
     <string name="wall_encountered">You found a wall!</string>
 </resources>

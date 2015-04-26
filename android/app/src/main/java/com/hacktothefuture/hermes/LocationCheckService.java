@@ -24,7 +24,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.squareup.otto.Subscribe;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit.RestAdapter;
 
@@ -39,7 +41,8 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 
     GoogleApiClient m_GoogleApiClient;
     RestAdapter m_restAdapter;
-    List<Wall> m_walls = new ArrayList<>();
+    List<Board> m_boards = new ArrayList<>();
+    Map<String, List<Board>> m_wallMessages = new HashMap<>();
 
 
 
@@ -96,10 +99,10 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
     public void onLocationChanged(Location location) {
         Log.i(TAG, "Lat: " + location.getLatitude() + ", Long: " + location.getLongitude() + ", Accuracy: " + location.getAccuracy());
 
-        for (Wall wall : m_walls) {
+        for (Board board : m_boards) {
             float[] results = new float[1];
             Location.distanceBetween((double) location.getLatitude(), (double) location.getLongitude(),
-                    (double) wall.get_latlng().latitude, (double) wall.get_latlng().longitude, results);
+                    (double) board.get_latlng().latitude, (double) board.get_latlng().longitude, results);
 
             Log.i(TAG, "\nDistance from wall: " + results[0]);
             if (results[0] < GEOFENCE_RADIUS_IN_METERS) {
@@ -182,9 +185,9 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
     }
 
     @Subscribe
-    public void onWallAdded(Wall wall) {
-       if (m_walls != null) {
-           m_walls.add(wall);
+    public void onWallAdded(Board board) {
+       if (m_boards != null) {
+           m_boards.add(board);
        }
     }
 

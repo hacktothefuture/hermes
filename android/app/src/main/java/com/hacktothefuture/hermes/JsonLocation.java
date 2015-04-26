@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Created by ldaniels on 4/25/15.
  */
-public class Location {
+public class JsonLocation {
 
     private String type;
     private List<Float> coordinates;
