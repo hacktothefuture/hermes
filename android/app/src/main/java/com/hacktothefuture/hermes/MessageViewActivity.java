@@ -1,17 +1,23 @@
 package com.hacktothefuture.hermes;
 
-import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
 
 public class MessageViewActivity extends ActionBarActivity {
 
+    String m_boardId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message_view);
+
+        Intent i = getIntent();
+        m_boardId = i.getStringExtra(LocationCheckService.EXTRA_BOARD_ID);
     }
 
 

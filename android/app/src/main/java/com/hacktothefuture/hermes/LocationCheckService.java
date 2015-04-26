@@ -26,8 +26,6 @@ import com.squareup.otto.Subscribe;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +40,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
     public static final String TAG = "LocationCheckService";
     private static final int GEOFENCE_RADIUS_IN_METERS = 15;
     private static final long LOCATION_POLLING_INTERVAL_IN_MILLIS = 3000;
+    public static final String EXTRA_BOARD_ID = "BOARD_ID";
 
     private final IBinder m_binder = new LocationCheckBinder();
     boolean m_bound;
@@ -88,7 +87,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
                 else {
                     Log.d(TAG, "Sending notification for board id " + board.get_id() +
                             ", # msgs = " + (messages == null ? "null" : messages.size()));
-                    sendNotification();
+                    sendNotification(board.get_id());
                     m_wallMessages.put(board.get_id(), board.getMessages());
                 }
             }
@@ -176,9 +175,10 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
         return new LatLng(location.getLatitude(), location.getLongitude());
     }
 
-    private void sendNotification() {
+    private void sendNotification(String id) {
         // Create an explicit content Intent that starts the main Activity.
-        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent notificationIntent = new Intent(getApplicationContext(), MessageViewActivity.class);
+        notificationIntent.putExtra(EXTRA_BOARD_ID, id);
 
         // Construct a task stack.
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
