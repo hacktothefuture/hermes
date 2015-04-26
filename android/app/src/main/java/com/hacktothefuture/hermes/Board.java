@@ -1,6 +1,7 @@
 package com.hacktothefuture.hermes;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
  */
 public class Board {
     private JsonLocation location;
+    @SerializedName("board")
     private List<String> messages;
     private String _id;
 

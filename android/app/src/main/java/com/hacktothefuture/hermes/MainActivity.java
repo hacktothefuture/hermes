@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
@@ -42,7 +41,6 @@ public class MainActivity extends ActionBarActivity implements
     private static final String TAG = "MainActivity";
     private static final int ZOOM_LEVEL = 19;
     private static final int GEOFENCE_RADIUS_IN_METERS = 15;
-    private static final long LOCATION_POLLING_INTERVAL_IN_MILLIS = 3000;
 
     TextView m_debugTextView;
 
@@ -52,7 +50,6 @@ public class MainActivity extends ActionBarActivity implements
     GoogleMap m_map;
     Marker m_marker;
     RestAdapter m_restAdapter;
-    List<Wall> m_walls = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,22 +100,10 @@ public class MainActivity extends ActionBarActivity implements
         AppClient.MyApp client = m_restAdapter.create(AppClient.MyApp.class);
 
         client.getBoards((float) latlng.latitude, (float) latlng.longitude, this);
-
     }
 
     private void leaveMessage(final LatLng latlng, String message) {
         Log.i(TAG, "Adding wall at lat= " + latlng.latitude + ", long= " + latlng.longitude);
-
-        m_map.addMarker(new MarkerOptions()
-                .position(latlng)
-                .title("Current location")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
-
-        CircleOptions circleOptions = new CircleOptions()
-                .center(latlng)
-                .radius(GEOFENCE_RADIUS_IN_METERS); // In meters
-
-        m_map.addCircle(circleOptions);
 
         AppClient.MyApp client = m_restAdapter.create(AppClient.MyApp.class);
 
@@ -135,17 +120,27 @@ public class MainActivity extends ActionBarActivity implements
         client.createBoard(bundle, new Callback<String>() {
             @Override
             public void success(String id, Response response) {
-                Log.i(TAG, "Retrofit POST successful.");
+                Log.i(TAG, "Retrofit POST successful. Received id " + id);
                 Board board = new Board();
                 board.set_id(id);
                 board.set_latlng(latlng);
+
+                m_map.addMarker(new MarkerOptions()
+                        .position(latlng)
+                        .title("Current location")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+                CircleOptions circleOptions = new CircleOptions()
+                        .center(latlng)
+                        .radius(GEOFENCE_RADIUS_IN_METERS); // In meters
+
+                m_map.addCircle(circleOptions);
 
                 LocationBus.getInstance().post(board);
             }
 
             @Override
             public void failure(RetrofitError error) {
-                Log.e(TAG, "Retrofit POST failed at URL: " + error.getUrl());
                 Log.e(TAG, "Retrofit POST failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
             }
         });
@@ -228,7 +223,6 @@ public class MainActivity extends ActionBarActivity implements
 
     @Override
     public void failure(RetrofitError error) {
-        Log.e(TAG, "Retrofit GET failed at URL: " + error.getUrl());
         Log.e(TAG, "Retrofit GET failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
     }
 

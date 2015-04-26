@@ -23,15 +23,17 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 import com.squareup.otto.Subscribe;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import retrofit.Callback;
 import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 public class LocationCheckService extends Service implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.OnConnectionFailedListener, LocationListener, Callback<List<Board>> {
     public static final String TAG = "LocationCheckService";
     private static final int GEOFENCE_RADIUS_IN_METERS = 15;
     private static final long LOCATION_POLLING_INTERVAL_IN_MILLIS = 3000;
@@ -41,12 +43,65 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 
     GoogleApiClient m_GoogleApiClient;
     RestAdapter m_restAdapter;
-    List<Board> m_boards = new ArrayList<>();
-    Map<String, List<Board>> m_wallMessages = new HashMap<>();
+//    List<Board> m_boards = new ArrayList<>();
+    static Map<String, List<String>> m_wallMessages = new HashMap<>();
 
 
 
     public LocationCheckService() {
+    }
+
+    @Override
+    public void success(List<Board> boards, Response response) {
+        if (boards != null && boards.size() > 0) {
+            Log.i(TAG, "Retrofit GET successful.");
+        } else {
+            Log.e(TAG, "Retrofit GET failed. Reponse was " + response.getBody());
+            return;
+        }
+
+        LatLng latlng = getLastLocation();
+
+
+        for (Board board : boards) {
+            double bLong = board.getLocation().getCoordinates().get(0);
+            double bLat = board.getLocation().getCoordinates().get(1);
+            board.set_latlng(new LatLng(bLat, bLong));
+            float[] results = new float[1];
+            Location.distanceBetween((double) latlng.latitude, (double) latlng.longitude,
+                    (double) board.get_latlng().latitude, (double) board.get_latlng().longitude, results);
+
+            List<String> messages;
+            Log.i(TAG, "\nDistance from board: " + results[0]);
+            Log.i(TAG, "\nOur pos: " + latlng.latitude + ", " + latlng.longitude);
+            Log.i(TAG, "\nBoard pos: " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
+            if (results[0] < GEOFENCE_RADIUS_IN_METERS) {
+                messages = m_wallMessages.get(board.get_id());
+                if (messages != null && messages.size() == board.getMessages().size()) {
+                    continue;
+                }
+                else {
+                    Log.d(TAG, "Sending notification for board id " + board.get_id() +
+                            ", # msgs = " + (messages == null ? "null" : messages.size()));
+                    sendNotification();
+                    m_wallMessages.put(board.get_id(), board.getMessages());
+                }
+            }
+        }
+
+
+//        for (Board board : boards) {
+//            List<String> message_list = board.getMessages();
+//            for (String s : message_list) {
+//            }
+//            JsonLocation loc = board.getLocation();
+//            List<Float> coords = loc.getCoordinates();
+//        }
+    }
+
+    @Override
+    public void failure(RetrofitError error) {
+        Log.e(TAG, "Retrofit GET failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
     }
 
     public class LocationCheckBinder extends Binder {
@@ -92,6 +147,10 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
         return super.onStartCommand(intent, flags, startId);
     }
 
+    private void getMessages(LatLng latlng) {
+        AppClient.MyApp client = m_restAdapter.create(AppClient.MyApp.class);
+        client.getBoards((float) latlng.latitude, (float) latlng.longitude, this);
+    }
 
 
 
@@ -99,17 +158,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
     public void onLocationChanged(Location location) {
         Log.i(TAG, "Lat: " + location.getLatitude() + ", Long: " + location.getLongitude() + ", Accuracy: " + location.getAccuracy());
 
-        for (Board board : m_boards) {
-            float[] results = new float[1];
-            Location.distanceBetween((double) location.getLatitude(), (double) location.getLongitude(),
-                    (double) board.get_latlng().latitude, (double) board.get_latlng().longitude, results);
-
-            Log.i(TAG, "\nDistance from wall: " + results[0]);
-            if (results[0] < GEOFENCE_RADIUS_IN_METERS) {
-                sendNotification();
-            }
-        }
-
+        getMessages(new LatLng(location.getLatitude(), location.getLongitude()));
         LocationBus.getInstance().post(new LatLng(location.getLatitude(), location.getLongitude()));
     }
 
@@ -185,9 +234,9 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
     }
 
     @Subscribe
-    public void onWallAdded(Board board) {
-       if (m_boards != null) {
-           m_boards.add(board);
+    public void onBoardAdded(Board board) {
+       if (m_wallMessages != null) {
+           m_wallMessages.put(board.get_id(), board.getMessages());
        }
     }
 
