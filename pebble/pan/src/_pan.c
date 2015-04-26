@@ -50,11 +50,11 @@ static void deinit(void) {
   window_destroy(window);
 }
 
-int main(void) {
+/*int main(void) {
   init();
 
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Done initializing, pushed window: %p", window);
 
   app_event_loop();
   deinit();
-}
+}*/

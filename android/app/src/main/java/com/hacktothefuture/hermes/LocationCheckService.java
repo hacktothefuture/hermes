@@ -15,6 +15,8 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
+import com.getpebble.android.kit.PebbleKit;
+import com.getpebble.android.kit.util.PebbleDictionary;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -42,6 +45,11 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
     private static final int GEOFENCE_RADIUS_IN_METERS = 15;
     private static final long LOCATION_POLLING_INTERVAL_IN_MILLIS = 3000;
     public static final String EXTRA_BOARD_ID = "BOARD_ID";
+    private static final UUID PEBBLE = UUID.fromString("9e484edb-535e-465b-9a81-b70778fbd429");
+
+    Board closest_board;
+    float closest_dist = Float.MAX_VALUE;
+    float closest_bearing = Float.MAX_VALUE;
 
     private final IBinder m_binder = new LocationCheckBinder();
     boolean m_bound;
@@ -68,12 +76,19 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
         List<Board> seenBoards = new ArrayList<>();
 
         for (Board board : boards) {
+
             double bLong = board.getLocation().getCoordinates().get(0);
             double bLat = board.getLocation().getCoordinates().get(1);
             board.set_latlng(new LatLng(bLat, bLong));
-            float[] results = new float[1];
+            float[] results = new float[2];
             Location.distanceBetween((double) latlng.latitude, (double) latlng.longitude,
                     (double) board.get_latlng().latitude, (double) board.get_latlng().longitude, results);
+
+            if(results[0] < closest_dist || closest_board == null) {
+                closest_board = board;
+                closest_dist = results[0];
+                closest_bearing = results[1];
+            }
 
             List<String> messages;
 //            Log.i(TAG, "\nDistance from board: " + results[0]);
@@ -92,8 +107,10 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
                     m_wallMessages.put(board.get_id(), board.getMessages());
                 }
             }
-        }
 
+        }
+        pebbleStr(0, convertBearing(closest_bearing));
+        pebbleStr(1, String.format("%.3f", closest_dist) + "m");
         LocationBus.getInstance().post(seenBoards);
 
 
@@ -105,6 +122,48 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 //            JsonLocation loc = board.getLocation();
 //            List<Float> coords = loc.getCoordinates();
 //        }
+    }
+
+    private String convertBearing(double bearing){
+        if(bearing >= -180 && bearing < -150){
+            //south
+            return "South";
+        }
+        else if(bearing >= -150 && bearing < -120){
+            //SE
+            return "South-West";
+        }
+        else if(bearing >= -120 && bearing < -60){
+            //E
+            return "West";
+        }
+        else if(bearing >= -60 && bearing < -30){
+            //NE
+            return "North-West";
+        }
+        else if(bearing >= -30 && bearing < 30){
+            //N
+            return "North";
+        }
+        else if(bearing >= 30 && bearing < 60){
+            //NW
+            return "North-East";
+        }
+        else if(bearing >= 60 && bearing < 120){
+            //W
+            return "East";
+        }
+        else if(bearing >= 120 && bearing < 150){
+            //SW
+            return "South-East";
+        }
+        else if(bearing >= 150 && bearing <= 180){
+            //S
+            return "South";
+        }
+        else{
+            return "N/A";
+        }
     }
 
     @Override
@@ -176,8 +235,9 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
             Log.e(TAG, "GAPI is null!");
         }
         Location location = LocationServices.FusedLocationApi.getLastLocation(m_GoogleApiClient);
-        if (location == null) return null;
-        else return new LatLng(location.getLatitude(), location.getLongitude());
+
+        return (location == null) ? null : new LatLng(location.getLatitude(), location.getLongitude());
+
     }
 
     private void sendNotification(String id) {
@@ -223,6 +283,8 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 
         // Issue the notification
         mNotificationManager.notify(0, builder.build());
+
+        sendPebble("Waypoint!", getString(R.string.wall_encountered));
     }
 
     @Override
@@ -267,5 +329,25 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 
         Log.d("Test", "Sending to Pebble: " + notificationData);
         sendBroadcast(i);
+    }
+
+    public void pebbleStr(int code, String msg){
+        PebbleDictionary data = new PebbleDictionary();
+
+// Add a key of 0, and a uint8_t (byte) of value 42.
+        data.addString(code, msg);
+
+        PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE, data);
+    }
+
+    public void pebbleStr(String bearing, String dist){
+        PebbleDictionary data = new PebbleDictionary();
+
+// Add a key of 0, and a uint8_t (byte) of value 42.
+        data.addString(1, dist);
+        data.addString(0, bearing);
+        Log.e("LOL", bearing + ">!>!" + dist);
+
+        PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE, data);
     }
 }
