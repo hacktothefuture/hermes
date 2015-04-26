@@ -15,7 +15,6 @@
     <string name="post">Post</string>
     <string name="cancel">Cancel</string>
     <string name="enter_message">Enter a board</string>
-    <string name="title_activity_message_log">MessageLogActivity</string>
     <string name="wall_encountered">You found a wall!</string>
-    <string name="title_activity_message_view">MessageViewActivity</string>
+    <string name="title_activity_message_view">Message Log</string>
 </resources>

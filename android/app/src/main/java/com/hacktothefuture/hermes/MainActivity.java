@@ -54,7 +54,7 @@ public class MainActivity extends ActionBarActivity implements
     LatLng m_lastMapTouch;
 
     GoogleMap m_map;
-    List<Marker> m_markers;
+    List<Marker> m_markers = new ArrayList<>();
     RestAdapter m_restAdapter;
 
     @Override
@@ -260,7 +260,7 @@ public class MainActivity extends ActionBarActivity implements
                     .zoom(ZOOM_LEVEL)                   // Sets the zoom
                     .tilt(0)                   // Sets the tilt of the camera to 0 degrees
                     .build();                   // Creates a CameraPosition from the builder
-            m_map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            m_map.moveCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
             if (m_markers != null) {
                 for (int i = 0; i < m_markers.size(); i++) {
                     m_markers.get(i).remove();

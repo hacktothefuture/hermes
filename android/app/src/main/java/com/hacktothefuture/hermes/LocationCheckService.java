@@ -76,9 +76,9 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
                     (double) board.get_latlng().latitude, (double) board.get_latlng().longitude, results);
 
             List<String> messages;
-            Log.i(TAG, "\nDistance from board: " + results[0]);
-            Log.i(TAG, "\nOur pos: " + latlng.latitude + ", " + latlng.longitude);
-            Log.i(TAG, "\nBoard pos: " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
+//            Log.i(TAG, "\nDistance from board: " + results[0]);
+//            Log.i(TAG, "\nOur pos: " + latlng.latitude + ", " + latlng.longitude);
+//            Log.i(TAG, "\nBoard pos: " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
             if (results[0] < GEOFENCE_RADIUS_IN_METERS) {
                 seenBoards.add(board);
                 messages = m_wallMessages.get(board.get_id());
@@ -189,7 +189,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
 
         // Add the main Activity to the task stack as the parent.
-        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addParentStack(MessageViewActivity.class);
 
         // Push the content Intent onto the stack.
         stackBuilder.addNextIntent(notificationIntent);
