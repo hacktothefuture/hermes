@@ -27,8 +27,13 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.squareup.otto.Subscribe;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -124,7 +129,7 @@ public class MainActivity extends ActionBarActivity implements
         com.hacktothefuture.hermes.Location loc = new com.hacktothefuture.hermes.Location();
         List<Float> coords = new ArrayList<>();
         coords.add((float)latlng.latitude);
-        coords.add((float)latlng.longitude);
+        coords.add((float) latlng.longitude);
         loc.setCoordinates(coords);
         PostBundle bundle = new PostBundle();
         bundle.setContent(message);
@@ -267,9 +272,15 @@ public class MainActivity extends ActionBarActivity implements
 
     }
 
+    public void toMsgView(View v){
+        Intent intent = new Intent(this, MessageViewActivity.class);
+        startActivity(intent);
+    }
+
     public void showNewMessageDialog() {
         // Create an instance of the dialog fragment and show it
         DialogFragment dialog = new NewMessageDialogFragment();
         dialog.show(getFragmentManager(), "NewMessageDialogFragment");
     }
+
 }
