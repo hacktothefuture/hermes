@@ -46,6 +46,15 @@
             android:enabled="true"
             android:exported="true" >
         </service>
+
+        <activity
+            android:name=".MessageViewActivity"
+            android:label="@string/title_activity_message_view"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.hacktothefuture.hermes.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

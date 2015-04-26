@@ -23,8 +23,13 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 import com.squareup.otto.Subscribe;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import retrofit.RestAdapter;
 
@@ -104,6 +109,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
             Log.i(TAG, "\nDistance from wall: " + results[0]);
             if (results[0] < GEOFENCE_RADIUS_IN_METERS) {
                 sendNotification();
+                sendPebble("You Hit a Wall!", "Motherfucker!");
             }
         }
 
@@ -188,4 +194,21 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
        }
     }
 
+
+    public void sendPebble(String title, String body) {
+        final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
+
+        final Map<String, String> data = new HashMap<String, String>();
+        data.put("title", title);
+        data.put("body", body);
+
+        final JSONObject jsonData = new JSONObject(data);
+        final String notificationData = new JSONArray().put(jsonData).toString();
+        i.putExtra("messageType", "PEBBLE_ALERT");
+        i.putExtra("sender", "Test");
+        i.putExtra("notificationData", notificationData);
+
+        Log.d("Test", "Sending to Pebble: " + notificationData);
+        sendBroadcast(i);
+    }
 }

@@ -17,4 +17,5 @@
     <string name="enter_message">Enter a message</string>
     <string name="title_activity_message_log">MessageLogActivity</string>
     <string name="wall_encountered">You found a wall!</string>
+    <string name="title_activity_message_view">MessageViewActivity</string>
 </resources>
