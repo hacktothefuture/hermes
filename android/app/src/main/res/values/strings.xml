@@ -4,7 +4,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="message_log">Message Log</string>
-    <string name="leave_message">Leave a board here</string>
+    <string name="leave_waypoint">Leave a waypoint here</string>
     <string name="geofence_transition_entered">Geofence entered</string>
     <string name="geofence_transition_exited">Geofence exited</string>
     <string name="unknown_geofence_transition">Unknown geofence transition</string>

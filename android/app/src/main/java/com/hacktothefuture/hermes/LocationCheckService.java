@@ -176,7 +176,8 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
             Log.e(TAG, "GAPI is null!");
         }
         Location location = LocationServices.FusedLocationApi.getLastLocation(m_GoogleApiClient);
-        return new LatLng(location.getLatitude(), location.getLongitude());
+        if (location == null) return null;
+        else return new LatLng(location.getLatitude(), location.getLongitude());
     }
 
     private void sendNotification(String id) {

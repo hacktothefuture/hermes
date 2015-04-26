@@ -1,5 +1,6 @@
 package com.hacktothefuture.hermes;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -18,8 +19,13 @@ import com.squareup.otto.Subscribe;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
-public class MessageViewActivity extends ActionBarActivity {
+
+public class MessageViewActivity extends ActionBarActivity implements NewMessageDialogFragment.NewMessageDialogListener {
     private static final String TAG = "MessageViewActivity";
 
     String m_boardId;
@@ -34,6 +40,7 @@ public class MessageViewActivity extends ActionBarActivity {
 
         Intent i = getIntent();
         m_boardId = i.getStringExtra(LocationCheckService.EXTRA_BOARD_ID);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     @Override
@@ -63,7 +70,9 @@ public class MessageViewActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_reply) {
+            DialogFragment dialog = new NewMessageDialogFragment();
+            dialog.show(getFragmentManager(), "NewMessageDialogFragment");
             return true;
         }
 
@@ -94,6 +103,36 @@ public class MessageViewActivity extends ActionBarActivity {
             }
         };
         m_listView.setAdapter(adapter);
+
+    }
+
+    @Override
+    public void onDialogPositiveClick(final String message) {
+        RestAdapter restAdapter = new RestAdapter.Builder()
+                .setEndpoint(AppClient.API_URL)
+                .build();
+        AppClient.MyApp client = restAdapter.create(AppClient.MyApp.class);
+        WriteMessageBundle bundle = new WriteMessageBundle();
+
+        bundle.setBoard_id(m_boardId);
+        bundle.setContent(message);
+        client.writeMessage(bundle, new Callback<String>() {
+            @Override
+            public void success(String s, Response response) {
+                Log.i(TAG, "Append message successful.");
+                m_messages.add(message);
+                ((ArrayAdapter)m_listView.getAdapter()).notifyDataSetChanged();
+            }
+
+            @Override
+            public void failure(RetrofitError error) {
+                Log.e(TAG, "Append message failed.");
+            }
+        });
+    }
+
+    @Override
+    public void onDialogNegativeClick() {
 
     }
 }

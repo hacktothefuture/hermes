@@ -46,6 +46,8 @@ public class MainActivity extends ActionBarActivity implements
 
     LocationCheckService m_service;
     boolean m_bound;
+    boolean m_isMapTouch = false;
+    LatLng m_lastMapTouch;
 
     GoogleMap m_map;
     List<Marker> m_markers;
@@ -68,7 +70,9 @@ public class MainActivity extends ActionBarActivity implements
                 m_map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                     @Override
                     public void onMapClick(LatLng latlng) {
-                        leaveMessage(latlng, "TODO: Can't add messages for map click yet");
+                        m_lastMapTouch = latlng;
+                        m_isMapTouch = true;
+                        showNewMessageDialog();
                     }
                 });
             }
@@ -83,15 +87,14 @@ public class MainActivity extends ActionBarActivity implements
             }
         });
 
-        Button getMessagesButton = (Button) findViewById(R.id.get_messages_button);
-        getMessagesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getMessages(getLastLocation());
-            }
-        });
+//        Button getMessagesButton = (Button) findViewById(R.id.get_messages_button);
+//        getMessagesButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                getMessages(getLastLocation());
+//            }
+//        });
 
-        m_debugTextView = (TextView) findViewById(R.id.debug_textview);
 
 
     }
@@ -270,10 +273,16 @@ public class MainActivity extends ActionBarActivity implements
 
     @Override
     public void onDialogPositiveClick(String message) {
-        LatLng latlng = getLastLocation();
-        if (latlng != null) {
-            leaveMessage(getLastLocation(), message);
+        LatLng latlng;
+        if (m_isMapTouch) {
+            latlng = m_lastMapTouch;
+        } else {
+            latlng = getLastLocation();
         }
+        if (latlng != null) {
+            leaveMessage(latlng, message);
+        }
+        m_isMapTouch = false;
     }
 
     @Override
