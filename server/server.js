@@ -200,7 +200,7 @@ var server = app.listen(8888, function() {
 				
 				var point = {
 					"type": "Point",
-					"coordinates": [0, 0]
+					"coordinates": [-93.14931, 44.46439]
 				};
 				
 				db.collection('boards').insert({
