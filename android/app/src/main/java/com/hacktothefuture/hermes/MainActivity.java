@@ -5,6 +5,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
@@ -148,8 +150,8 @@ public class MainActivity extends ActionBarActivity implements
 
                 m_markers.add(m_map.addMarker(new MarkerOptions()
                         .position(latlng)
-                        .title("Current location")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))));
+                        .title(board.get_id())
+                        .icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.icon), 60, 60, false)))));
 
                 CircleOptions circleOptions = new CircleOptions()
                         .center(latlng)
@@ -255,7 +257,8 @@ public class MainActivity extends ActionBarActivity implements
             newMarkers.add(m_map.addMarker(new MarkerOptions()
                     .position(board.get_latlng())
                     .title(board.get_id())
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))));
+                    .icon(BitmapDescriptorFactory.fromBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.icon), 60, 60, false)))));
+
             Log.i(TAG, "Marker added at " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
         }
         if (m_map != null) {
