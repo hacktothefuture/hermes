@@ -12,6 +12,27 @@
     "dummy": 0
   },
   "resources": {
-    "media": []
+    "media": [
+      {
+        "type": "png",
+        "name": "UP",
+        "file": "up.png"
+      },
+      {
+        "type": "png",
+        "name": "DOWN",
+        "file": "down.png"
+      },
+      {
+        "type": "png",
+        "name": "left",
+        "file": "left.png"
+      },
+      {
+        "type": "png",
+        "name": "RIGHT",
+        "file": "right.png"
+      }
+    ]
   }
 }
