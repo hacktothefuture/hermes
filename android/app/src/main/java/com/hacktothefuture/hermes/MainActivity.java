@@ -36,11 +36,15 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
+
+
+
 public class MainActivity extends ActionBarActivity implements
         Callback<List<Board>>, NewMessageDialogFragment.NewMessageDialogListener {
     private static final String TAG = "MainActivity";
     private static final int ZOOM_LEVEL = 19;
     private static final int GEOFENCE_RADIUS_IN_METERS = 15;
+    public static final String EXTRA_BOARD_ID = "BOARD_ID";
 
     TextView m_debugTextView;
 
@@ -75,6 +79,17 @@ public class MainActivity extends ActionBarActivity implements
                         showNewMessageDialog();
                     }
                 });
+                m_map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker m) {
+                        if(!m.getTitle().equals("Current location")) {
+                            Intent notificationIntent = new Intent(getApplicationContext(), MessageViewActivity.class);
+                            notificationIntent.putExtra(EXTRA_BOARD_ID, m.getTitle());
+                            startActivity(notificationIntent);
+                        }
+                        return false;
+                    }
+                });
             }
         });
 
@@ -86,6 +101,8 @@ public class MainActivity extends ActionBarActivity implements
                 showNewMessageDialog();
             }
         });
+
+
 
 //        Button getMessagesButton = (Button) findViewById(R.id.get_messages_button);
 //        getMessagesButton.setOnClickListener(new View.OnClickListener() {
@@ -233,6 +250,7 @@ public class MainActivity extends ActionBarActivity implements
         for (Board board : boards) {
             newMarkers.add(m_map.addMarker(new MarkerOptions()
                     .position(board.get_latlng())
+                    .title(board.get_id())
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))));
             Log.i(TAG, "Marker added at " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
         }
