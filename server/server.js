@@ -46,11 +46,16 @@ var insertBoard = function(db, message_info, callback) {
 		message_info.key = "";
 	}
 	
-	db.collection('boards').insert( {
-		"location" : point,
-		"key" : message_info.key,
-		"board": [message_info.content]
-	});
+	db.collection('boards').insert( 
+		{
+			"location" : point,
+			"key" : message_info.key,
+			"board": [message_info.content]
+		},
+		function(err, docsInserted){
+			callback(docsInserted.ops[0]._id);
+		}
+	);
 };
 
 
@@ -173,11 +178,11 @@ app.post( '/send_message', function(request, response){
 	MongoClient.connect(url, function(err, db) {
 		assert.equal(null, err);
 		console.log("Connected correctly to server.");
-		insertBoard(db, request.body, function() {
+		insertBoard(db, request.body, function(new_id) {
 			db.close();
+			response.send(new_id);
 		});
 	});
-	response.send(null);
 });
 
 var server = app.listen(8888, function() {

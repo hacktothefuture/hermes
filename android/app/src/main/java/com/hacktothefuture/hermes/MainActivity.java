@@ -42,11 +42,10 @@ import retrofit.client.Response;
 
 
 public class MainActivity extends ActionBarActivity implements
-        Callback<List<Message>>, NewMessageDialogFragment.NewMessageDialogListener {
+        Callback<List<Board>>, NewMessageDialogFragment.NewMessageDialogListener {
     private static final String TAG = "MainActivity";
     private static final int ZOOM_LEVEL = 19;
     private static final int GEOFENCE_RADIUS_IN_METERS = 15;
-    private static final long LOCATION_POLLING_INTERVAL_IN_MILLIS = 3000;
 
     TextView m_debugTextView;
 
@@ -56,7 +55,6 @@ public class MainActivity extends ActionBarActivity implements
     GoogleMap m_map;
     Marker m_marker;
     RestAdapter m_restAdapter;
-    List<Wall> m_walls = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,49 +104,48 @@ public class MainActivity extends ActionBarActivity implements
     private void getMessages(LatLng latlng) {
         AppClient.MyApp client = m_restAdapter.create(AppClient.MyApp.class);
 
-        client.getMessages((float)latlng.latitude, (float)latlng.longitude, this);
-
+        client.getBoards((float) latlng.latitude, (float) latlng.longitude, this);
     }
 
     private void leaveMessage(final LatLng latlng, String message) {
         Log.i(TAG, "Adding wall at lat= " + latlng.latitude + ", long= " + latlng.longitude);
 
-        m_map.addMarker(new MarkerOptions()
-                .position(latlng)
-                .title("Current location")
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
-
-        CircleOptions circleOptions = new CircleOptions()
-                .center(latlng)
-                .radius(GEOFENCE_RADIUS_IN_METERS); // In meters
-
-        m_map.addCircle(circleOptions);
-
         AppClient.MyApp client = m_restAdapter.create(AppClient.MyApp.class);
 
-        com.hacktothefuture.hermes.Location loc = new com.hacktothefuture.hermes.Location();
+        JsonLocation loc = new JsonLocation();
         List<Float> coords = new ArrayList<>();
         coords.add((float)latlng.latitude);
         coords.add((float) latlng.longitude);
         loc.setCoordinates(coords);
-        PostBundle bundle = new PostBundle();
+
+        CreateBoardBundle bundle = new CreateBoardBundle();
         bundle.setContent(message);
         bundle.setLocation(loc);
 
-        client.sendMessage(bundle, new Callback<Void>() {
+        client.createBoard(bundle, new Callback<String>() {
             @Override
-            public void success(Void aVoid, Response response) {
-                Log.i(TAG, "Retrofit POST successful.");
-                Wall wall = new Wall();
-                wall.set_id("TODO-MITCH-SEND-ID");
-                wall.set_latlng(latlng);
+            public void success(String id, Response response) {
+                Log.i(TAG, "Retrofit POST successful. Received id " + id);
+                Board board = new Board();
+                board.set_id(id);
+                board.set_latlng(latlng);
 
-                LocationBus.getInstance().post(wall);
+                m_map.addMarker(new MarkerOptions()
+                        .position(latlng)
+                        .title("Current location")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+                CircleOptions circleOptions = new CircleOptions()
+                        .center(latlng)
+                        .radius(GEOFENCE_RADIUS_IN_METERS); // In meters
+
+                m_map.addCircle(circleOptions);
+
+                LocationBus.getInstance().post(board);
             }
 
             @Override
             public void failure(RetrofitError error) {
-                Log.e(TAG, "Retrofit POST failed at URL: " + error.getUrl());
                 Log.e(TAG, "Retrofit POST failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
             }
         });
@@ -211,27 +208,26 @@ public class MainActivity extends ActionBarActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    public void success(List<Message> messages, Response response) {
-        if (messages != null && messages.size() > 0) {
+    public void success(List<Board> boards, Response response) {
+        if (boards != null && boards.size() > 0) {
             Log.i(TAG, "Retrofit GET successful.");
         } else {
             Log.e(TAG, "Retrofit GET failed. Reponse was " + response.getBody());
             return;
         }
-        for (Message message : messages) {
-            List<String> message_list = message.getBoard();
+        for (Board board : boards) {
+            List<String> message_list = board.getMessages();
             for (String s : message_list) {
                 Log.i(TAG, "Receieved message: " + s);
             }
-            com.hacktothefuture.hermes.Location loc = message.getLocation();
+            JsonLocation loc = board.getLocation();
             List<Float> coords = loc.getCoordinates();
-            Log.i(TAG, "Location: lat = " + coords.get(0) + ", long = " + coords.get(1) + ", board_id = " + message.get_id());
+            Log.i(TAG, "Location: lat = " + coords.get(0) + ", long = " + coords.get(1) + ", board_id = " + board.get_id());
         }
     }
 
     @Override
     public void failure(RetrofitError error) {
-        Log.e(TAG, "Retrofit GET failed at URL: " + error.getUrl());
         Log.e(TAG, "Retrofit GET failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
     }
 
