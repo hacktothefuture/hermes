@@ -52,6 +52,7 @@ public class MainActivity extends ActionBarActivity implements
     boolean m_bound;
     boolean m_isMapTouch = false;
     LatLng m_lastMapTouch;
+    LatLng m_lastLocation;
 
     GoogleMap m_map;
     List<Marker> m_markers = new ArrayList<>();
@@ -129,7 +130,7 @@ public class MainActivity extends ActionBarActivity implements
 
         JsonLocation loc = new JsonLocation();
         List<Float> coords = new ArrayList<>();
-        coords.add((float)latlng.latitude);
+        coords.add((float) latlng.latitude);
         coords.add((float) latlng.longitude);
         loc.setCoordinates(coords);
 
@@ -244,7 +245,10 @@ public class MainActivity extends ActionBarActivity implements
     @Subscribe
     public void populateMap(ArrayList<Board> boards) {
         Log.i(TAG, "Populating map with " + boards.size() + " boards");
-        LatLng latlng = getLastLocation();
+        LatLng latlng = m_lastLocation;
+        if (latlng == null) {
+            Log.e(TAG, "Can't zoom to a null LatLng!");
+        }
         List<Marker> newMarkers = new ArrayList<>();
 
         for (Board board : boards) {
@@ -276,17 +280,14 @@ public class MainActivity extends ActionBarActivity implements
         }
     }
 
+    @Subscribe
+    public void onLocationChanged(LatLng latlng) {
+        m_lastLocation = latlng;
+    }
+
     @Override
     public void failure(RetrofitError error) {
         Log.e(TAG, "Retrofit GET failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
-    }
-
-    private LatLng getLastLocation() {
-        if (m_bound) {
-            return m_service.getLastLocation();
-        } else {
-            return null;
-        }
     }
 
     @Override
@@ -295,7 +296,7 @@ public class MainActivity extends ActionBarActivity implements
         if (m_isMapTouch) {
             latlng = m_lastMapTouch;
         } else {
-            latlng = getLastLocation();
+            latlng = m_lastLocation;
         }
         if (latlng != null) {
             leaveMessage(latlng, message);

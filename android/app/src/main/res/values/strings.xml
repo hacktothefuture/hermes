@@ -14,7 +14,7 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="post">Post</string>
     <string name="cancel">Cancel</string>
-    <string name="enter_message">Enter a board</string>
-    <string name="wall_encountered">You found a wall!</string>
-    <string name="title_activity_message_view">Message Log</string>
+    <string name="enter_message">Enter a message</string>
+    <string name="wall_encountered">You found a waypoint!</string>
+    <string name="title_activity_message_view">Waypoint Messages</string>
 </resources>

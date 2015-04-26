@@ -39,6 +39,9 @@ import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 
+import com.getpebble.android.kit.PebbleKit;
+import com.getpebble.android.kit.util.PebbleDictionary;
+
 public class LocationCheckService extends Service implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener, Callback<List<Board>> {
     public static final String TAG = "LocationCheckService";
@@ -65,15 +68,17 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 
     @Override
     public void success(List<Board> boards, Response response) {
+        LatLng latlng = getLastLocation();
+        List<Board> seenBoards = new ArrayList<>();
+
         if (boards != null && boards.size() > 0) {
             Log.i(TAG, "Retrofit GET successful.");
         } else {
             Log.e(TAG, "Retrofit GET failed. Reponse was " + response.getBody());
+            LocationBus.getInstance().post(seenBoards);
             return;
         }
 
-        LatLng latlng = getLastLocation();
-        List<Board> seenBoards = new ArrayList<>();
 
         for (Board board : boards) {
 
@@ -225,9 +230,10 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
     public void onLocationChanged(Location location) {
         Log.i(TAG, "Lat: " + location.getLatitude() + ", Long: " + location.getLongitude() + ", Accuracy: " + location.getAccuracy());
 
+        LocationBus.getInstance().post(new LatLng(location.getLatitude(), location.getLongitude()));
+
         getMessages(new LatLng(location.getLatitude(), location.getLongitude()));
 
-        LocationBus.getInstance().post(new LatLng(location.getLatitude(), location.getLongitude()));
     }
 
     public LatLng getLastLocation() {
