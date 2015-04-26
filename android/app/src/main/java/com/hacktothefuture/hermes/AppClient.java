@@ -12,6 +12,8 @@ import retrofit.http.Query;
  * Created by ldaniels on 4/25/15.
  */
 public class AppClient {
+    public static final String API_URL = "http://137.22.189.79:8888";
+
 
     public interface MyApp {
         @GET("/get_messages")
