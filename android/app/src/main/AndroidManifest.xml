@@ -32,16 +32,6 @@
             android:value="AIzaSyArZ27uGKgcXJFaAtdqLA0kcHkWwpAYLl0" />
 
         <service
-            android:name=".GeofenceTransitionService"
-            android:exported="false" >
-        </service>
-
-        <activity
-            android:name=".MessageLogActivity"
-            android:label="@string/title_activity_message_log" >
-        </activity>
-
-        <service
             android:name=".LocationCheckService"
             android:enabled="true"
             android:exported="true" >

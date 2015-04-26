@@ -56,28 +56,16 @@
     <Button android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="@string/leave_message"
+        android:text="@string/leave_waypoint"
         android:id="@+id/leave_message_button"
         android:textAllCaps="false" />
-    <Button android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="@string/get_messages"
-        android:id="@+id/get_messages_button"
-        android:textAllCaps="false" />
+    <!--<Button android:layout_height="wrap_content"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_gravity="center_horizontal"-->
+        <!--android:text="@string/get_messages"-->
+        <!--android:id="@+id/get_messages_button"-->
+        <!--android:textAllCaps="false" />-->
     </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/debug_textview"/>
-
-    <Button android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="MSG VIEW"
-        android:id="@+id/msg_view"
-        android:textAllCaps="false"
-        android:onClick="toMsgView"/>
 
 </LinearLayout>

@@ -36,19 +36,25 @@ import retrofit.RetrofitError;
 import retrofit.client.Response;
 
 
+
+
+
 public class MainActivity extends ActionBarActivity implements
         Callback<List<Board>>, NewMessageDialogFragment.NewMessageDialogListener {
     private static final String TAG = "MainActivity";
     private static final int ZOOM_LEVEL = 19;
     private static final int GEOFENCE_RADIUS_IN_METERS = 15;
+    public static final String EXTRA_BOARD_ID = "BOARD_ID";
 
     TextView m_debugTextView;
 
     LocationCheckService m_service;
     boolean m_bound;
+    boolean m_isMapTouch = false;
+    LatLng m_lastMapTouch;
 
     GoogleMap m_map;
-    Marker m_marker;
+    List<Marker> m_markers;
     RestAdapter m_restAdapter;
 
     @Override
@@ -68,7 +74,20 @@ public class MainActivity extends ActionBarActivity implements
                 m_map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
                     @Override
                     public void onMapClick(LatLng latlng) {
-                        leaveMessage(latlng, "TODO: Can't add messages for map click yet");
+                        m_lastMapTouch = latlng;
+                        m_isMapTouch = true;
+                        showNewMessageDialog();
+                    }
+                });
+                m_map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                    @Override
+                    public boolean onMarkerClick(Marker m) {
+                        if(!m.getTitle().equals("Current location")) {
+                            Intent notificationIntent = new Intent(getApplicationContext(), MessageViewActivity.class);
+                            notificationIntent.putExtra(EXTRA_BOARD_ID, m.getTitle());
+                            startActivity(notificationIntent);
+                        }
+                        return false;
                     }
                 });
             }
@@ -83,15 +102,16 @@ public class MainActivity extends ActionBarActivity implements
             }
         });
 
-        Button getMessagesButton = (Button) findViewById(R.id.get_messages_button);
-        getMessagesButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                getMessages(getLastLocation());
-            }
-        });
 
-        m_debugTextView = (TextView) findViewById(R.id.debug_textview);
+
+//        Button getMessagesButton = (Button) findViewById(R.id.get_messages_button);
+//        getMessagesButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                getMessages(getLastLocation());
+//            }
+//        });
+
 
 
     }
@@ -125,10 +145,10 @@ public class MainActivity extends ActionBarActivity implements
                 board.set_id(id);
                 board.set_latlng(latlng);
 
-                m_map.addMarker(new MarkerOptions()
+                m_markers.add(m_map.addMarker(new MarkerOptions()
                         .position(latlng)
                         .title("Current location")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))));
 
                 CircleOptions circleOptions = new CircleOptions()
                         .center(latlng)
@@ -221,6 +241,41 @@ public class MainActivity extends ActionBarActivity implements
         }
     }
 
+    @Subscribe
+    public void populateMap(ArrayList<Board> boards) {
+        Log.i(TAG, "Populating map with " + boards.size() + " boards");
+        LatLng latlng = getLastLocation();
+        List<Marker> newMarkers = new ArrayList<>();
+
+        for (Board board : boards) {
+            newMarkers.add(m_map.addMarker(new MarkerOptions()
+                    .position(board.get_latlng())
+                    .title(board.get_id())
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))));
+            Log.i(TAG, "Marker added at " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
+        }
+        if (m_map != null) {
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(latlng)             // Sets the center of the map to current location
+                    .zoom(ZOOM_LEVEL)                   // Sets the zoom
+                    .tilt(0)                   // Sets the tilt of the camera to 0 degrees
+                    .build();                   // Creates a CameraPosition from the builder
+            m_map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            if (m_markers != null) {
+                for (int i = 0; i < m_markers.size(); i++) {
+                    m_markers.get(i).remove();
+                }
+                m_markers.clear();
+            } else {
+                m_markers = new ArrayList<>();
+            }
+            m_markers = newMarkers;
+            m_markers.add(m_map.addMarker(new MarkerOptions()
+                    .position(latlng)
+                    .title("Current location")));
+        }
+    }
+
     @Override
     public void failure(RetrofitError error) {
         Log.e(TAG, "Retrofit GET failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
@@ -234,28 +289,18 @@ public class MainActivity extends ActionBarActivity implements
         }
     }
 
-    @Subscribe
-    public void onLocationChanged(LatLng latlng) {
-        if (m_map != null) {
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(latlng)             // Sets the center of the map to current location
-                    .zoom(ZOOM_LEVEL)                   // Sets the zoom
-                    .tilt(0)                   // Sets the tilt of the camera to 0 degrees
-                    .build();                   // Creates a CameraPosition from the builder
-            m_map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            if (m_marker != null) m_marker.remove();
-            m_marker = m_map.addMarker(new MarkerOptions()
-                    .position(latlng)
-                    .title("Current location"));
-        }
-    }
-
     @Override
     public void onDialogPositiveClick(String message) {
-        LatLng latlng = getLastLocation();
-        if (latlng != null) {
-            leaveMessage(getLastLocation(), message);
+        LatLng latlng;
+        if (m_isMapTouch) {
+            latlng = m_lastMapTouch;
+        } else {
+            latlng = getLastLocation();
         }
+        if (latlng != null) {
+            leaveMessage(latlng, message);
+        }
+        m_isMapTouch = false;
     }
 
     @Override

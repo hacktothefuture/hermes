@@ -28,6 +28,7 @@ import com.squareup.otto.Subscribe;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,6 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 
     GoogleApiClient m_GoogleApiClient;
     RestAdapter m_restAdapter;
-//    List<Board> m_boards = new ArrayList<>();
     static Map<String, List<String>> m_wallMessages = new HashMap<>();
 
 
@@ -73,7 +73,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
         }
 
         LatLng latlng = getLastLocation();
-
+        List<Board> seenBoards = new ArrayList<>();
 
         for (Board board : boards) {
 
@@ -95,6 +95,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
             Log.i(TAG, "\nOur pos: " + latlng.latitude + ", " + latlng.longitude);
             Log.i(TAG, "\nBoard pos: " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
             if (results[0] < GEOFENCE_RADIUS_IN_METERS) {
+                seenBoards.add(board);
                 messages = m_wallMessages.get(board.get_id());
                 if (messages != null && messages.size() == board.getMessages().size()) {
                     continue;
@@ -110,6 +111,9 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
         }
         pebbleStr(0, convertBearing(closest_bearing));
         pebbleStr(1, String.format("%.3f", closest_dist) + "m");
+        LocationBus.getInstance().post(seenBoards);
+
+
 
 //        for (Board board : boards) {
 //            List<String> message_list = board.getMessages();
@@ -231,7 +235,9 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
             Log.e(TAG, "GAPI is null!");
         }
         Location location = LocationServices.FusedLocationApi.getLastLocation(m_GoogleApiClient);
+
         return (location == null) ? null : new LatLng(location.getLatitude(), location.getLongitude());
+
     }
 
     private void sendNotification(String id) {
