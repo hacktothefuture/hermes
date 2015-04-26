@@ -48,7 +48,7 @@ public class MainActivity extends ActionBarActivity implements
     boolean m_bound;
 
     GoogleMap m_map;
-    Marker m_marker;
+    List<Marker> m_markers;
     RestAdapter m_restAdapter;
 
     @Override
@@ -125,10 +125,10 @@ public class MainActivity extends ActionBarActivity implements
                 board.set_id(id);
                 board.set_latlng(latlng);
 
-                m_map.addMarker(new MarkerOptions()
+                m_markers.add(m_map.addMarker(new MarkerOptions()
                         .position(latlng)
                         .title("Current location")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))));
 
                 CircleOptions circleOptions = new CircleOptions()
                         .center(latlng)
@@ -221,6 +221,40 @@ public class MainActivity extends ActionBarActivity implements
         }
     }
 
+    @Subscribe
+    public void populateMap(ArrayList<Board> boards) {
+        Log.i(TAG, "Populating map with " + boards.size() + " boards");
+        LatLng latlng = getLastLocation();
+        List<Marker> newMarkers = new ArrayList<>();
+
+        for (Board board : boards) {
+            newMarkers.add(m_map.addMarker(new MarkerOptions()
+                    .position(board.get_latlng())
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))));
+            Log.i(TAG, "Marker added at " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
+        }
+        if (m_map != null) {
+            CameraPosition cameraPosition = new CameraPosition.Builder()
+                    .target(latlng)             // Sets the center of the map to current location
+                    .zoom(ZOOM_LEVEL)                   // Sets the zoom
+                    .tilt(0)                   // Sets the tilt of the camera to 0 degrees
+                    .build();                   // Creates a CameraPosition from the builder
+            m_map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            if (m_markers != null) {
+                for (int i = 0; i < m_markers.size(); i++) {
+                    m_markers.get(i).remove();
+                }
+                m_markers.clear();
+            } else {
+                m_markers = new ArrayList<>();
+            }
+            m_markers = newMarkers;
+            m_markers.add(m_map.addMarker(new MarkerOptions()
+                    .position(latlng)
+                    .title("Current location")));
+        }
+    }
+
     @Override
     public void failure(RetrofitError error) {
         Log.e(TAG, "Retrofit GET failed. Body: " + error.getBody() + ", message: " + error.getMessage() + ", kind: " + error.getKind());
@@ -231,22 +265,6 @@ public class MainActivity extends ActionBarActivity implements
             return m_service.getLastLocation();
         } else {
             return null;
-        }
-    }
-
-    @Subscribe
-    public void onLocationChanged(LatLng latlng) {
-        if (m_map != null) {
-            CameraPosition cameraPosition = new CameraPosition.Builder()
-                    .target(latlng)             // Sets the center of the map to current location
-                    .zoom(ZOOM_LEVEL)                   // Sets the zoom
-                    .tilt(0)                   // Sets the tilt of the camera to 0 degrees
-                    .build();                   // Creates a CameraPosition from the builder
-            m_map.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-            if (m_marker != null) m_marker.remove();
-            m_marker = m_map.addMarker(new MarkerOptions()
-                    .position(latlng)
-                    .title("Current location"));
         }
     }
 

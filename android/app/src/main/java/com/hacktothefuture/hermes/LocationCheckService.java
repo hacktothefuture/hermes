@@ -26,6 +26,7 @@ import com.squareup.otto.Subscribe;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,6 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
 
     GoogleApiClient m_GoogleApiClient;
     RestAdapter m_restAdapter;
-//    List<Board> m_boards = new ArrayList<>();
     static Map<String, List<String>> m_wallMessages = new HashMap<>();
 
 
@@ -65,7 +65,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
         }
 
         LatLng latlng = getLastLocation();
-
+        List<Board> seenBoards = new ArrayList<>();
 
         for (Board board : boards) {
             double bLong = board.getLocation().getCoordinates().get(0);
@@ -80,6 +80,7 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
             Log.i(TAG, "\nOur pos: " + latlng.latitude + ", " + latlng.longitude);
             Log.i(TAG, "\nBoard pos: " + board.get_latlng().latitude + ", " + board.get_latlng().longitude);
             if (results[0] < GEOFENCE_RADIUS_IN_METERS) {
+                seenBoards.add(board);
                 messages = m_wallMessages.get(board.get_id());
                 if (messages != null && messages.size() == board.getMessages().size()) {
                     continue;
@@ -92,6 +93,9 @@ public class LocationCheckService extends Service implements GoogleApiClient.Con
                 }
             }
         }
+
+        LocationBus.getInstance().post(seenBoards);
+
 
 
 //        for (Board board : boards) {
